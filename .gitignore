@@ -7,3 +7,5 @@
 *.o
 *.so
 *.nes
+alter_ego_src/
+obj/
