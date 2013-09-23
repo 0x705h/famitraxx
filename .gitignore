@@ -9,3 +9,5 @@
 *.nes
 alter_ego_src/
 obj/
+famitraxx.sublime-project
+famitraxx.sublime-workspace

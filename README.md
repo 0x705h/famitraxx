@@ -12,7 +12,6 @@ $ make
 
 Make sure that after compiling cc65, binaries folder are available to user.
 
-#compiling helloworld
-```
-../cc65/bin/cl65 -t nes src/hello.c -o hello.nes
-```
+# Compiling
+
+Use build.sh script to build the ROM.
