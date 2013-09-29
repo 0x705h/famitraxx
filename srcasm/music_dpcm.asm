@@ -1,0 +1,13 @@
+music_dpcm:
+	db $00+FT_DPCM_PTR,$18,$0f,$00
+	db $15+FT_DPCM_PTR,$20,$0f,$00
+	db $07+FT_DPCM_PTR,$34,$0f,$00
+	db $1e+FT_DPCM_PTR,$34,$0f,$00
+	db $00+FT_DPCM_PTR,$00,$00,$00
+	db $00+FT_DPCM_PTR,$00,$00,$00
+	db $00+FT_DPCM_PTR,$00,$00,$00
+	db $00+FT_DPCM_PTR,$00,$00,$00
+	db $00+FT_DPCM_PTR,$00,$00,$00
+	db $00+FT_DPCM_PTR,$00,$00,$00
+	db $00+FT_DPCM_PTR,$00,$00,$00
+	db $00+FT_DPCM_PTR,$00,$00,$00
