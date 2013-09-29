@@ -11,3 +11,7 @@ alter_ego_src/
 obj/
 famitraxx.sublime-project
 famitraxx.sublime-workspace
+src/asm6
+src/music.asm
+src/text2data
+

@@ -80,7 +80,7 @@ FT_THREAD				;undefine if you call sound effects in the same thread as sound upd
 ; CHR-ROM 4 banks
 ;----------------------------------------------------------------
 
+.incbin "basic.chr"
 .incbin "tileset.chr"
-.incbin "tileset.chr"
-.incbin "tileset.chr"
+.incbin "basic.chr"
 .incbin "tileset.chr"

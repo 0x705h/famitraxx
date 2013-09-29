@@ -5,23 +5,9 @@
 ; Main Variables
 ;----------------------------------------------------------------
 
-.enum $0100 	; Famitone uses $0000 -- $00FF
-
-;NOTE: declare variables using the DSB and DSW directives, like this:
-
-scroll_h: 			.dsb $00
-scroll_v: 			.dsb $00
-frame_counter:		.dsb $ff
-
-.ende
-
-;NOTE: you can also split the variable declarations into individual pages, like this:
-
-;.enum $0100
-;.ende
-
-;.enum $0200
-;.ende
+scroll_h = $a0
+scroll_v = $a1
+frame_counter = $a2
 
 ;----------------------------------------------------------------
 ; program bank(s)
@@ -29,10 +15,13 @@ frame_counter:		.dsb $ff
 
    .base $10000-(PRG_COUNT*$4000)
 
+;----------------------------------------------------------------
+; Reset: init code
+; this happens every time NES starts up 
+; or reset button is pressed
+;----------------------------------------------------------------
+
 Reset:
-	; initizalization code
-	; (this happens every time the NES starts up
-	; or reset button is pressed)
 	sei	; disable irq
 	cld	; disable decimal mode
 	ldx #$00
@@ -56,8 +45,19 @@ clearMem:
 	inx
 	bne clearMem
 
-	lda CHRBANK1	; select the first chr bank defined in header.asm
+	lda #CHRBANK1	; select the first chr bank defined in header.asm
 	jsr bankswitch 	; and switch to it!
+
+;----------------------------------------------------------------
+; Set Variables in memory
+;----------------------------------------------------------------
+	lda #$00
+
+	sta scroll_h
+	sta scroll_v
+	sta frame_counter
+
+;----------------------------------------------------------------
 
 	ldx #$02
 WarmUp:
@@ -71,7 +71,9 @@ WarmUp:
 	lda #$00
 	sta $2006
 
-; ----- load palette
+;----------------------------------------------------------------
+; Load palette
+;----------------------------------------------------------------
 	ldx	#$00
 load_pal:                     
 	lda palette,x
@@ -85,7 +87,11 @@ load_pal:
 	lda #$00
 	sta $2006
 
-	ldy #$04                ; clear nametables
+;----------------------------------------------------------------
+; Wupe out nametables
+;----------------------------------------------------------------
+
+	ldy #$04                
 wipeNametables:
 	ldx #$00
 	lda #$00
@@ -120,9 +126,11 @@ music_start:
 	jsr FamiToneMusicStart
 
 
-	;       ---------------------------------------------------- write the welcome message
+;----------------------------------------------------------------
+; Text on screen
+;----------------------------------------------------------------
 
-		bit $2002	; read ppu_status to reset address latch
+		;bit $2002	; read ppu_status to reset address latch
 
 		lda #$20
 		sta $2006
@@ -130,19 +138,16 @@ music_start:
 		sta $2006
 		ldx #$00
 
-	WriteWelcome:
-		lda WelcomeText,x
+	write_message:
+		lda message,x
 		cmp #$0d
-		beq DoneWelcome
+		beq end_write_message
 		sta $2007
 		inx
-		jmp WriteWelcome
-	DoneWelcome:	
+		jmp write_message
+	end_write_message:	
 
-	;jsr waitNMI
-
-
-	lda #%00011110	;enable display
+	lda #%00011110		; enable video
 	sta $2001
 
 	lda #%10001000		; generate nmi + sprite pattern table
@@ -150,19 +155,18 @@ music_start:
 	lda #%00001110		; show left background, sprites, background
 	sta $2001			; PPUMASK
 
-	jsr vblankwait      		; last vblankwait before loop
+	jsr vblankwait      ; last vblankwait before loop
 
 ;----------------------------------------------------------------
 ; Main Loop
 ;----------------------------------------------------------------
 
 die:
-
 	jsr waitNMI
 	
-	ldy frame_counter	; these three
-	ldx palette 		; lines will glitch
-	jsr glitch 			; PPU (must disable waitNMI in this loop)
+	;ldy frame_counter	; these three
+	;ldx palette 		; lines will glitch
+	;jsr glitch 		; PPU (must disable waitNMI in this loop)
 	
 	jmp die 	; ad infinitum
 
@@ -211,11 +215,6 @@ vblankwait:
 	bit $2002
 	bpl vblankwait
 
-	;ldx scroll_h
-	;stx $2005
-	;ldx scroll_v
-	;stx $2005
-
 	rts	
 
 waitNMI:
@@ -225,18 +224,28 @@ waitNMI:
 	beq @notYet
 	rts
 
-NMI:
-   ; Non-Maskable Interrupt code 
-   ; (this happens once per video frame)
-   inc frame_counter	; increment the frame counter
-   						; for waitNMI
+;----------------------------------------------------------------
+; Non-Maskable Interrupt code / runs every video frame
+;----------------------------------------------------------------
 
-   jsr FamiToneUpdate
+NMI:
+	inc frame_counter	; increment the frame counter
+						; for waitNMI
+
+	ldx scroll_h	; set position
+	stx $2005		; of scroll
+	ldx scroll_v	; managed by scroll_h/v vars.
+	stx $2005
+
+	jsr FamiToneUpdate
    
    rti
 
+;----------------------------------------------------------------
+; Non-Maskable Interrupt code / runs every video frame
+;----------------------------------------------------------------
+
 IRQ:
-   ; IRQ code
    rti
 
 
@@ -244,15 +253,15 @@ IRQ:
 ; Text data
 ;----------------------------------------------------------------
 
-WelcomeText:
-        .db "FAMITRAXX",$0D
+message:
+        .db "FAMITRAXX - BSAS ARG",$0D
 
 ;----------------------------------------------------------------
 ; Palette data
 ;----------------------------------------------------------------
 
 palette:
-	byte $0F,$10,$30,$10,$03,$00,$10,$30,$0F,$00,$10,$30,$0F,$00,$10,$30;
+	.db $0F,$00,$10,$30,$0F,$00,$10,$30,$0F,$00,$10,$30,$0F,$00,$10,$30
 
 ;----------------------------------------------------------------
 ; DPCM data
